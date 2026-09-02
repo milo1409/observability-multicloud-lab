@@ -939,7 +939,10 @@ Finalmente, Terraform permite reproducir la infraestructura y mantener las confi
 
 ## Autor
 
-**Camilo Andres Porras**
+**Edward Daniel Porras Martín**
+**Oscar Eduardo Clavijo Alarcón**
+**Yerlinson Maturana Serna**
+**Camilo Andrés Porras Martín**
 
 Maestría en Arquitectura de Software
 
