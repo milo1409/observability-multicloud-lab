@@ -48,7 +48,7 @@ services:
       DB_NAME: observability
       DB_USER: observability
       DB_PASSWORD: observability
-      CHAOS_ERROR_RATE: "0.10"
+      CHAOS_ERROR_RATE: "0"
     volumes:
       - aiops-shared:/shared
     depends_on:
@@ -67,7 +67,7 @@ services:
       DEPLOYMENT_ENVIRONMENT: sandbox
       CLOUD_PROVIDER: local
       DATA_SERVICE_URL: http://data-service:8003
-      CHAOS_LATENCY_MS: "300"
+      CHAOS_LATENCY_MS: "0"
     depends_on:
       - data-service
       - otel-collector
