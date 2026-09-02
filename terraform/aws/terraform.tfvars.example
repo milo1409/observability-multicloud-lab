@@ -1,0 +1,17 @@
+aws_region   = "us-east-1"
+project_name = "obs-multicloud"
+environment  = "sandbox"
+
+enable_flow_logs    = true
+enable_rds          = false
+enable_security_hub = false
+
+flow_logs_retention_days = 1
+
+
+enable_ec2 = false
+ec2_instance_type = "t3.micro"
+
+# Temporalmente puede dejarse abierto para la prueba HTTP.
+# Mejor: reemplazar por TU_IP_PUBLICA/32
+service_a_allowed_cidr = "0.0.0.0/0"

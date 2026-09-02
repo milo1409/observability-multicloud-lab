@@ -1,0 +1,105 @@
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: observability
+      POSTGRES_USER: observability
+      POSTGRES_PASSWORD: observability
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U observability -d observability"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.132.0
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    volumes:
+      - ./otel/otel-collector.yaml:/etc/otelcol-contrib/config.yaml:ro
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "9464:9464"
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      - otel-collector
+
+  data-service:
+    build: ./services/data-service
+    environment:
+      OTEL_SERVICE_NAME: data-service
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      DEPLOYMENT_ENVIRONMENT: sandbox
+      CLOUD_PROVIDER: local
+      DB_PROVIDER: local
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: observability
+      DB_USER: observability
+      DB_PASSWORD: observability
+      CHAOS_ERROR_RATE: "0.10"
+    volumes:
+      - aiops-shared:/shared
+    depends_on:
+      postgres:
+        condition: service_healthy
+      otel-collector:
+        condition: service_started
+    ports:
+      - "8003:8003"
+
+  service-b:
+    build: ./services/service-b
+    environment:
+      OTEL_SERVICE_NAME: service-b
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      DEPLOYMENT_ENVIRONMENT: sandbox
+      CLOUD_PROVIDER: local
+      DATA_SERVICE_URL: http://data-service:8003
+      CHAOS_LATENCY_MS: "300"
+    depends_on:
+      - data-service
+      - otel-collector
+    ports:
+      - "8002:8002"
+
+  service-a:
+    build: ./services/service-a
+    environment:
+      OTEL_SERVICE_NAME: service-a
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      DEPLOYMENT_ENVIRONMENT: sandbox
+      CLOUD_PROVIDER: local
+      SERVICE_B_URL: http://service-b:8002
+    depends_on:
+      - service-b
+      - otel-collector
+    ports:
+      - "8001:8001"
+
+  aiops-detector:
+    build: ./aiops
+    environment:
+      PROMETHEUS_URL: http://prometheus:9090
+      SLO_P99_MS: "250"
+      POLL_SECONDS: "5"
+      WARMUP_SECONDS: "60"
+      COOLDOWN_SECONDS: "60"
+    volumes:
+      - aiops-shared:/shared
+    depends_on:
+      - prometheus
+
+volumes:
+  aiops-shared:

@@ -1,0 +1,32 @@
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+.terraform.lock.hcl
+terraform.tfvars
+
+# AWS
+.aws/
+credentials
+
+# Secrets
+.env
+.env.*
+*.pem
+*.key
+*.pfx
+*.p12
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Generated evidence
+*.log
+
+# OS
+Thumbs.db
+.DS_Store
